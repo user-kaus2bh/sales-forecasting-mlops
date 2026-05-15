@@ -1,0 +1,19 @@
+stages:
+  generate_data:
+    cmd: python src/generate_data.py
+    deps:
+      - src/generate_data.py
+    outs:
+      - data/raw/sales_data.csv
+
+  data_pipeline:
+    cmd: python src/data_pipeline.py
+    deps:
+      - src/data_pipeline.py
+      - data/raw/sales_data.csv
+      - configs/data_config.yaml
+    outs:
+      - data/processed/train.csv
+      - data/processed/val.csv
+      - data/processed/test.csv
+      - data/processed/feature_meta.json

@@ -1,0 +1,45 @@
+# Data Pipeline Configuration
+# Phase 1 — Sales Forecasting MLOps
+
+data:
+  raw_path: data/raw/sales_data.csv
+  processed_dir: data/processed/
+  target_column: sales
+  date_column: date
+  store_column: store_id
+
+generation:
+  n_stores: 10
+  start_date: "2020-01-01"
+  end_date: "2023-12-31"
+  random_seed: 42
+
+cleaning:
+  remove_closed_stores: true     # Drop rows where open=0
+  min_sales_threshold: 0         # Drop negative sales
+
+features:
+  lag_days: [1, 7, 14, 30]
+  rolling_windows: [7, 14, 30]
+  cyclical_encode: [month, day_of_week]
+  log_transform_cols: [competition_distance]
+
+split:
+  method: time_based             # Never random-split time series!
+  val_months: 3
+  test_months: 3
+
+columns:
+  categorical:
+    - store_type
+    - assortment
+    - state_holiday
+  drop_after_encoding:
+    - state_holiday
+    - store_type
+    - assortment
+  id_cols:
+    - date
+    - store_id
+    - open
+    - customers
