@@ -1,0 +1,69 @@
+# Model Training Configuration
+# Phase 2 — Sales Forecasting MLOps
+
+mlflow:
+  experiment_name: sales_forecasting
+  tracking_uri: mlruns          # local folder; swap for remote URI in prod
+  registered_model_name: sales_forecaster
+
+training:
+  target: sales
+  random_seed: 42
+  n_optuna_trials: 30           # hyperparameter tuning trials per model
+  cv_folds: 3                   # time-series cross-validation folds
+
+metrics:
+  primary: rmse                 # used to rank experiments and pick best model
+  secondary: [mae, mape, r2]
+
+models:
+  baseline:
+    name: linear_regression
+    params: {}
+
+  xgboost:
+    name: xgboost
+    params:
+      n_estimators: 300
+      learning_rate: 0.05
+      max_depth: 6
+      subsample: 0.8
+      colsample_bytree: 0.8
+      min_child_weight: 5
+      reg_alpha: 0.1
+      reg_lambda: 1.0
+
+  lightgbm:
+    name: lightgbm
+    params:
+      n_estimators: 300
+      learning_rate: 0.05
+      max_depth: 6
+      num_leaves: 63
+      subsample: 0.8
+      colsample_bytree: 0.8
+      min_child_samples: 20
+      reg_alpha: 0.1
+      reg_lambda: 1.0
+
+optuna:
+  xgboost:
+    n_estimators: [100, 500]
+    learning_rate: [0.01, 0.3]
+    max_depth: [3, 9]
+    subsample: [0.6, 1.0]
+    colsample_bytree: [0.6, 1.0]
+    min_child_weight: [1, 10]
+    reg_alpha: [0.0, 1.0]
+    reg_lambda: [0.5, 2.0]
+
+  lightgbm:
+    n_estimators: [100, 500]
+    learning_rate: [0.01, 0.3]
+    max_depth: [3, 9]
+    num_leaves: [31, 127]
+    subsample: [0.6, 1.0]
+    colsample_bytree: [0.6, 1.0]
+    min_child_samples: [10, 50]
+    reg_alpha: [0.0, 1.0]
+    reg_lambda: [0.5, 2.0]
