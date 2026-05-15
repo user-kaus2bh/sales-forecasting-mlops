@@ -89,4 +89,4 @@ Synthetic retail sales dataset (Rossmann-inspired) with:
 
 ## Author
 
-Built as a 4-day MLOps capstone project.
+Built as a MLOps  project.
