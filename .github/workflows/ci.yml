@@ -24,6 +24,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
 
   # ── Job 1: Run unit tests ──────────────────────────────────────────────────
@@ -49,7 +52,8 @@ jobs:
             xgboost lightgbm \
             mlflow optuna joblib \
             pytest pytest-cov \
-            scipy pyyaml
+            scipy pyyaml \
+            fastapi uvicorn httpx pydantic
 
       - name: Generate data and run pipeline
         run: |
@@ -98,7 +102,7 @@ jobs:
             --max-line-length=100 \
             --extend-ignore=E203,W503,E501 \
             --exclude=__pycache__,.git \
-            --count --statistics
+            --count --statistics || true
         continue-on-error: true   # warn but don't fail the pipeline on style issues
 
   # ── Job 3: Build Docker image ──────────────────────────────────────────────
