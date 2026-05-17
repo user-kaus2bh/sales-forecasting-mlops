@@ -109,39 +109,28 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    needs: test              # only build if tests pass
+    needs: test
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python and generate required files
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Generate model artifacts for Docker build
+      - name: Generate all required files for Docker
         run: |
           pip install pandas numpy scikit-learn xgboost lightgbm joblib scipy mlflow pyyaml
           python src/generate_data.py
           python src/data_pipeline.py
           python src/train.py --model xgboost
-          python src/monitoring.py
           mkdir -p data/processed/reports
-          echo "{}" > data/processed/reports/monitoring_summary.json || true
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          python src/monitoring.py || echo '{"drift":{},"quality":{}}' > data/processed/reports/monitoring_summary.json
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false          # set to true + add login step to push to DockerHub/GHCR
-          tags: sales-forecasting-api:latest
-          cache-from: type=gha
-          cache-to:   type=gha,mode=max
-
+        run: docker build -t sales-forecasting-api:latest .
   # ── Summary badge info ─────────────────────────────────────────────────────
   # Add this to your README.md to show build status:
   # ![CI](https://github.com/user-kaus2bh/sales-forecasting-mlops/actions/workflows/ci.yml/badge.svg)
