@@ -122,7 +122,7 @@ jobs:
 
       - name: Generate all required files for Docker
         run: |
-          pip install pandas numpy scikit-learn xgboost lightgbm joblib scipy mlflow pyyaml
+          pip install pandas numpy scikit-learn xgboost lightgbm joblib scipy mlflow pyyaml optuna
           python src/generate_data.py
           python src/data_pipeline.py
           python src/train.py --model xgboost
