@@ -1,0 +1,143 @@
+# ── Sales Forecasting MLOps — CI/CD Pipeline ──────────────────────────────────
+# Phase 4: GitHub Actions workflow
+#
+# Triggers on every push to main or pull request to main.
+# Jobs:
+#   1. test    → runs all 42 unit tests
+#   2. lint    → checks code style with flake8
+#   3. build   → builds Docker image (validates Dockerfile)
+#
+# To add real deployment (e.g. AWS ECS, Railway, Render):
+#   - Add secrets in GitHub Settings → Secrets
+#   - Uncomment the deploy job below
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Cancel in-progress runs when a new run is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ── Job 1: Run unit tests ──────────────────────────────────────────────────
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            pandas numpy scikit-learn \
+            xgboost lightgbm \
+            mlflow optuna joblib \
+            pytest pytest-cov \
+            scipy pyyaml
+
+      - name: Generate data and run pipeline
+        run: |
+          python src/generate_data.py
+          python src/data_pipeline.py
+
+      - name: Train models (fast mode)
+        run: |
+          python src/train.py --model xgboost
+
+      - name: Run unit tests with coverage
+        run: |
+          python -m pytest tests/ -v \
+            --tb=short \
+            --cov=src \
+            --cov-report=term-missing \
+            --cov-report=xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # ── Job 2: Lint code ───────────────────────────────────────────────────────
+  lint:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linting tools
+        run: pip install flake8
+
+      - name: Run flake8
+        run: |
+          flake8 src/ app/ tests/ pipelines/ \
+            --max-line-length=100 \
+            --extend-ignore=E203,W503,E501 \
+            --exclude=__pycache__,.git \
+            --count --statistics
+        continue-on-error: true   # warn but don't fail the pipeline on style issues
+
+  # ── Job 3: Build Docker image ──────────────────────────────────────────────
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test              # only build if tests pass
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python and generate required files
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate model artifacts for Docker build
+        run: |
+          pip install pandas numpy scikit-learn xgboost lightgbm joblib scipy mlflow pyyaml
+          python src/generate_data.py
+          python src/data_pipeline.py
+          python src/train.py --model xgboost
+          python src/monitoring.py
+          mkdir -p data/processed/reports
+          echo "{}" > data/processed/reports/monitoring_summary.json || true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false          # set to true + add login step to push to DockerHub/GHCR
+          tags: sales-forecasting-api:latest
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+  # ── Summary badge info ─────────────────────────────────────────────────────
+  # Add this to your README.md to show build status:
+  # ![CI](https://github.com/user-kaus2bh/sales-forecasting-mlops/actions/workflows/ci.yml/badge.svg)
