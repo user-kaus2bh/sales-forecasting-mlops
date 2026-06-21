@@ -8,6 +8,7 @@ echo "==> Running data pipeline..."
 python src/data_pipeline.py
 
 echo "==> Training model..."
+export MLFLOW_ALLOW_FILE_STORE=true
 python src/train.py --model xgboost
 
 echo "==> Running monitoring..."
