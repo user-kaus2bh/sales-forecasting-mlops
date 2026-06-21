@@ -1,0 +1,6 @@
+{
+  "model_name": "lightgbm_tuned",
+  "run_id": "478ee21d2293480cbdc83664ea045dcb",
+  "val_rmse": 929.9043182362519,
+  "registered_model": "sales_forecaster"
+}
