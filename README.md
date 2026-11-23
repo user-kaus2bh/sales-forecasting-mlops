@@ -1,5 +1,7 @@
 # Sales Forecasting MLOps
 
+Live - https://sales-forecasting-mlops-kubwjywyae7dtuumniatv2.streamlit.app/
+
 An end-to-end MLOps project for retail sales forecasting — built across 4 days, covering data pipelines, experiment tracking, model monitoring, and production deployment.
 
 ## Project structure
