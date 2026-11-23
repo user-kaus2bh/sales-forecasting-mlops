@@ -87,6 +87,4 @@ Synthetic retail sales dataset (Rossmann-inspired) with:
 - Features: promotions, holidays, store type, competition distance
 - Engineered features: lag values, rolling means, cyclical encodings
 
-## Author
 
-Built as a MLOps  project.
